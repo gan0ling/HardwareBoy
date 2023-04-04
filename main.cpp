@@ -17,6 +17,9 @@ HardwareBoy::HardwareBoy()
   int ret = m_serDev.connectReadEvent(this);
   LOG("connectReadEvent:ret " << ret);
 
+  //terminal setting
+  term.ShowScrollBar();
+
 }
 
 void HardwareBoy::OpenClose()
@@ -35,8 +38,6 @@ void HardwareBoy::OpenClose()
     }
     //TODO: 1. buffer size use config file
     //      2. Flow control use ui config
-    DUMP(set.baudrate);
-    DUMP(set.name);
     m_serDev.init(set.name, set.baudrate, set.parity, set.dataBits, set.stopBits, itas109::FlowNone, READ_BUFF_SIZE);
     bool ret = m_serDev.open();
 
@@ -45,7 +46,6 @@ void HardwareBoy::OpenClose()
     btnOpen.SetLabel("Open");
     //close serial
     m_serDev.close();
-    m_serDev.disconnectReadEvent();
   }
 }
 
@@ -90,7 +90,7 @@ void HardwareBoy::onReadEvent(const char *portName, unsigned int readBufferLen)
     }
     m_serDev.readData(m_readBuf, len);
     readBufferLen -= len;
-    term.Write(m_readBuf, len);
+    term.Write(m_readBuf, len, false);
   }
 }
 
