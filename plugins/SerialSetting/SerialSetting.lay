@@ -1,0 +1,15 @@
+LAYOUT(SerialSettingLayout, 160, 152)
+	ITEM(Upp::Label, dv___0, SetLabel(t_("Port:")).LeftPosZ(12, 40).TopPosZ(12, 19))
+	ITEM(Upp::DropList, baudList, LeftPosZ(80, 64).TopPosZ(36, 19))
+	ITEM(Upp::DropList, dataList, LeftPosZ(80, 64).TopPosZ(60, 19))
+	ITEM(Upp::Label, dv___3, SetLabel(t_("BaudRate:")).LeftPosZ(12, 56).TopPosZ(36, 19))
+	ITEM(Upp::Label, dv___4, SetLabel(t_("StopBits:")).LeftPosZ(12, 56).TopPosZ(84, 19))
+	ITEM(Upp::Label, dv___5, SetLabel(t_("DataBits:")).LeftPosZ(12, 60).TopPosZ(60, 19))
+	ITEM(Upp::Label, dv___6, SetLabel(t_("Parity:")).LeftPosZ(12, 40).TopPosZ(108, 19))
+	ITEM(Upp::DropList, portList, LeftPosZ(80, 64).TopPosZ(12, 19))
+	ITEM(Upp::DropList, stopBitsList, LeftPosZ(80, 64).TopPosZ(84, 19))
+	ITEM(Upp::DropList, parityList, LeftPosZ(80, 64).TopPosZ(108, 19))
+	ITEM(Upp::Button, btnOK, SetLabel(t_("OK")).LeftPosZ(8, 56).TopPosZ(132, 15))
+	ITEM(Upp::Button, btnCancel, SetLabel(t_("Cancel")).LeftPosZ(80, 56).TopPosZ(132, 15))
+END_LAYOUT
+

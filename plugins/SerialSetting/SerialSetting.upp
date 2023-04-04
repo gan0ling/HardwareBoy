@@ -1,0 +1,14 @@
+uses
+	CtrlLib;
+
+library
+	libcserialport;
+
+file
+	SerialSetting.h,
+	SerialSetting.cpp,
+	SerialSetting.lay;
+
+mainconfig
+	"" = "GUI";
+

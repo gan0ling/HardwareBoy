@@ -1,0 +1,15 @@
+description "Hardware debug assistent\377";
+
+uses
+	CtrlLib,
+	HardwareBoy/plugins/SerialSetting,
+	TerminalCtrl/Terminal;
+
+file
+	HardwareBoy.h,
+	main.cpp,
+	HardwareBoy.lay;
+
+mainconfig
+	"" = "GUI";
+
