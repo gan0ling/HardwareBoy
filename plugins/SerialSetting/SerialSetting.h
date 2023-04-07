@@ -10,26 +10,28 @@ using namespace Upp;
 #define LAYOUTFILE <SerialSetting/SerialSetting.lay>
 #include <CtrlCore/lay.h>
 
-struct SerialPortSetting {
-  String name;
-  int baudrate;
-  itas109::StopBits stopBits;
-  itas109::Parity parity;
-  itas109::DataBits dataBits;
-};
+namespace Seven {
+  struct SerialPortSetting {
+    String name;
+    int baudrate;
+    itas109::StopBits stopBits;
+    itas109::Parity parity;
+    itas109::DataBits dataBits;
+  };
 
-class SerialSetting : public WithSerialSettingLayout<TopWindow> {
-public:
-  typedef SerialSetting CLASSNAME;
-	SerialSetting();
+  class SerialSetting : public WithSerialSettingLayout<TopWindow> {
+  public:
+    typedef SerialSetting CLASSNAME;
+    SerialSetting();
 
-  struct SerialPortSetting GetData();
+    struct SerialPortSetting GetData();
 
-private:
-  bool m_select;
+  private:
+    bool m_select;
 
-  void ok();
-  // void cancel();
-};
+    void ok();
+    // void cancel();
+  };
+}
 
 #endif

@@ -1,14 +1,16 @@
 #include "CSerialPort/SerialPort_global.h"
 #include "HardwareBoy.h"
-#include <iostream>
 
-HardwareBoy::HardwareBoy()
+using namespace Seven;
+
+HardwareBoy::HardwareBoy():
+  m_curRecvMode(TEXT_MODE)
 {
   m_serialSetting.Show(true);
 
-	CtrlLayout(*this, "HardwareBoy");
+  CtrlLayout(*this, "HardwareBoy");
   menu.Set(THISBACK(SetupMenu));
-  Sizeable().MaximizeBox();
+  Sizeable().MaximizeBox().MinimizeBox();
   Maximize();
 
   btnOpen <<= THISBACK(OpenClose);
@@ -20,6 +22,26 @@ HardwareBoy::HardwareBoy()
   //terminal setting
   term.ShowScrollBar();
 
+  //TODO: remove
+  //register evRawInput/evRawHexInput
+  EQ &queue = EVGetGlobalQueue();
+  // queue.appendListener(EventType::evRawInput, THISBACK(DisplayText));
+  // queue.appendListener(EventType::evRawHexInput, THISBACK(DisplayText));
+  queue.appendListener(EventType::evTextHighlight, THISBACK(DisplayText));
+
+  //TODO: use config file to enable plugin
+  m_rawtoline.Enable();
+  m_highlighter.Enable(true);
+}
+
+HardwareBoy::~HardwareBoy()
+{
+  ShutdownThreads();
+}
+
+void HardwareBoy::SwitchHexTextMode(enum RecvMode newMode)
+{
+  m_curRecvMode = newMode;
 }
 
 void HardwareBoy::OpenClose()
@@ -73,6 +95,10 @@ void HardwareBoy::RunSerialConfig()
   m_serialSetting.Run();
 }
 
+static inline int FormatHexDigit(int c) {
+	return c < 10 ? c + '0' : c - 10 + 'a';
+}
+
 void HardwareBoy::onReadEvent(const char *portName, unsigned int readBufferLen)
 {
   //if serial is not open return
@@ -80,21 +106,70 @@ void HardwareBoy::onReadEvent(const char *portName, unsigned int readBufferLen)
     return;
   }
 
-  //read data, write to term
+  EQ &queue = EVGetGlobalQueue();
+
   int len = 0;
   while (readBufferLen > 0) {
     if (readBufferLen > READ_BUFF_SIZE) {
-      len = READ_BUFF_SIZE;
+        len = READ_BUFF_SIZE;    
     } else {
-      len = readBufferLen;
+        len = readBufferLen;
     }
-    m_serDev.readData(m_readBuf, len);
+    int readLen = m_serDev.readData(m_readBuf, readBufferLen);
+    if (readLen <= 0) {
+      //read failed, exit
+      return;
+    }
     readBufferLen -= len;
-    term.Write(m_readBuf, len, false);
+    if (m_curRecvMode == HEX_MODE) {
+      //change text to hex char
+      Buffer<byte> hex(len * 2);
+      for (int i = 0; i < readBufferLen; i++) {
+        hex[i] = FormatHexDigit(m_readBuf[i] & 0xF);
+        hex[i+1] = FormatHexDigit((m_readBuf[i] >> 4) & 0xF);
+      }
+      queue.enqueue(std::make_shared<RawHexInputEvent>(~hex, len*2));
+    } else {
+      //Text mode, just enqueue event
+      queue.enqueue(std::make_shared<RawInputEvent>((byte*)&m_readBuf[0], len));
+    }
   }
+
+    // term.Write(m_readBuf, len, false);
+    //use event queue to dispatch event
+}
+
+void HardwareBoy::DisplayText(const EventPointer &ev)
+{
+  // receive evRawInput && evRawHexInput
+#if 0
+  switch (ev->getType()) {
+    case EventType::evRawInput: {
+      const RawInputEvent * textEv = static_cast<const RawInputEvent*>(ev.get());
+      term.Write(textEv->Get(), textEv->Size(), true);
+      break;
+    }
+    case EventType::evRawHexInput: {
+      const RawHexInputEvent * hexEv = static_cast<const RawHexInputEvent*>(ev.get());
+      term.Write(hexEv->Get(), hexEv->Size(), true);
+      break;
+    }
+    default: {
+      break;
+    }
+  }
+#endif
+  const TextHighlightEvent *event = static_cast<const TextHighlightEvent*>(ev.get());
+  term.Write(event->Line(), true);
 }
 
 GUI_APP_MAIN
 {
-	HardwareBoy().Run();
+  //create event queue process thread
+  Thread::Start(EVProcess);
+  // EQ &queue = EVGetGlobalQueue();
+  // queue.appendListener(EventType::evRawInput, [](const EventPointer &ev) {
+    // LOG("recv raw input");
+  // });
+  HardwareBoy().Run();
 }

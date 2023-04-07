@@ -1,6 +1,8 @@
 #include "SerialSetting.h"
 #include "CSerialPort/SerialPortInfo.h"
 
+using namespace Seven;
+
 SerialSetting::SerialSetting() {
   // TODO: How to enable edit for baudList
   baudList.Add({

@@ -3,12 +3,17 @@ description "Hardware debug assistent\377";
 uses
 	CtrlLib,
 	HardwareBoy/plugins/SerialSetting,
-	TerminalCtrl/Terminal;
+	TerminalCtrl/Terminal,
+	HardwareBoy/plugins/EventQueue,
+	HardwareBoy/plugins/Highlighter;
 
 file
 	HardwareBoy.h,
 	main.cpp,
-	HardwareBoy.lay;
+	utils.h,
+	utils.cpp,
+	HardwareBoy.lay,
+	setting.ini;
 
 mainconfig
 	"" = "GUI";

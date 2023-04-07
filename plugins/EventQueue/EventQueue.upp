@@ -1,0 +1,12 @@
+description "Event Queue plugin\377";
+
+uses
+	CtrlLib;
+
+file
+	EventQueue.h,
+	EventQueue.cpp;
+
+mainconfig
+	"" = "GUI";
+

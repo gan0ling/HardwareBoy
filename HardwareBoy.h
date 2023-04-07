@@ -6,24 +6,37 @@
 #include "CSerialPort/SerialPort.h"
 #include "plugins/SerialSetting/SerialSetting.h"
 #include "TerminalCtrl/Terminal/Terminal.h"
+#include "plugins/EventQueue/EventQueue.h"
+#include "plugins/Highlighter/Highlighter.hpp"
+#include "utils.h"
 
 #define READ_BUFF_SIZE  (1024)
 
 using namespace Upp;
+using namespace Seven;
 
 #define LAYOUTFILE <HardwareBoy/HardwareBoy.lay>
 #include <CtrlCore/lay.h>
 
+enum RecvMode {
+  TEXT_MODE = 0,
+  HEX_MODE = 1,
+};
+
 class HardwareBoy : public WithHardwareBoyLayout<TopWindow>, itas109::CSerialPortListener {
 public:
   typedef HardwareBoy CLASSNAME;
-	HardwareBoy();
+  HardwareBoy();
+  ~HardwareBoy();
   virtual void onReadEvent(const char *portName, unsigned int readBufferLen);
 
 private:
-  char m_readBuf[READ_BUFF_SIZE]; 
+  enum RecvMode m_curRecvMode;
+  byte m_readBuf[READ_BUFF_SIZE]; 
   SerialSetting m_serialSetting;
   itas109::CSerialPort m_serDev;
+  RawDataToLine m_rawtoline;
+  CommonHighlighter m_highlighter;
 
 
   //menu 
@@ -35,6 +48,10 @@ private:
   //serial
   void RunSerialConfig(void);
   void OpenClose(void);
+  void SwitchHexTextMode(enum RecvMode mode);
+
+  //terminal receive 
+  void DisplayText(const EventPointer &ev);
 };
 
 #endif

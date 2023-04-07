@@ -1,0 +1,14 @@
+description "Highlighter\377";
+
+uses
+	CtrlLib,
+	TerminalCtrl/Terminal;
+
+file
+	pretty.hpp,
+	Highlighter.hpp,
+	Highlighter.cpp;
+
+mainconfig
+	"" = "GUI";
+
