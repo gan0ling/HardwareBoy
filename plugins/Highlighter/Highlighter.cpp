@@ -208,12 +208,12 @@ void CommonHighlighter::Highlight(const EventPointer &ev)
     String ret; 
 
     Vector<String> words = SplitWords(event->Line());
-    DUMP(words);
+    // DUMP(words);
     const Index<String>& colorIndex = m_colorMap.GetIndex();
     for (auto w : words) {
         //TODO: case sensitive
         String ww = ToLower(w);
-        DUMP(ww);
+        // DUMP(ww);
         int idx = colorIndex.Find(ww);
         if (idx >= 0) {
             //found
@@ -225,7 +225,7 @@ void CommonHighlighter::Highlight(const EventPointer &ev)
         }
     }
     ret << "\r\n";
-    DUMP(ret);
+    // DUMP(ret);
     q.enqueue(EventType::evTextHighlight, std::make_shared<TextHighlightEvent>(ret));
 }
 

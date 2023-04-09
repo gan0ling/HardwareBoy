@@ -11,19 +11,17 @@ RawDataToLine::RawDataToLine()
 
 RawDataToLine::~RawDataToLine()
 {
-  Disable();
+  Enable(false);
 }
 
-void RawDataToLine::Enable()
+void RawDataToLine::Enable(bool enable)
 {
   EQ &q = EVGetGlobalQueue();
-  m_handle = q.appendListener(EventType::evRawInput, THISBACK(RawToLine));
-}
-
-void RawDataToLine::Disable()
-{
-  EQ &q = EVGetGlobalQueue();
-  q.removeListener(EventType::evRawInput, m_handle);
+  if (enable) {
+    m_handle = q.appendListener(EventType::evRawInput, THISBACK(RawToLine));
+  } else {
+    q.removeListener(EventType::evRawInput, m_handle);
+  }
 }
 
 void RawDataToLine::RawToLine(const Seven::EventPointer &ev)
@@ -149,6 +147,49 @@ MyTextSettings& Seven::GetGlobalSetting()
   }
 
   return settings;
+}
+
+RawDataToLog::RawDataToLog()
+{
+}
+
+RawDataToLog::~RawDataToLog()
+{
+  Enable(false);
+}
+
+void RawDataToLog::Enable(bool enable)
+{
+  EQ &q = EVGetGlobalQueue();
+  if (enable) {
+    m_handle_txt = q.appendListener(EventType::evRawInput, THISBACK(SaveToFile));
+    m_handle_hex = q.appendListener(EventType::evRawHexInput, THISBACK(SaveToFile));
+    //create output file
+    Time now = GetSysTime();
+    String logName = Sprintf("log/%d-%d-%d_%d-%d-%d.log", now.year, now.month, now.day, now.hour, now.minute, now.second);
+    DUMP(ConfigFile(logName));
+    m_out.Open(ConfigFile(logName));
+  } else {
+    q.removeListener(EventType::evRawInput, m_handle_txt);
+    q.removeListener(EventType::evRawHexInput, m_handle_hex);
+    m_out.Flush();
+    m_out.Close();
+  }
+}
+
+void RawDataToLog::SaveToFile(const EventPointer &ev)
+{
+  if (!m_out.IsOpen()) {
+    return;
+  }
+  // String 
+  if (ev->getType() == EventType::evRawInput) {
+    const RawInputEvent *event = static_cast<const RawInputEvent*>(ev.get());
+    m_out.Put(event->Get(), event->Size());
+  } else if (ev->getType() == EventType::evRawHexInput) {
+    const RawHexInputEvent *event = static_cast<const RawHexInputEvent*>(ev.get());
+    m_out.Put(event->Get(), event->Size());
+  }
 }
 
 };

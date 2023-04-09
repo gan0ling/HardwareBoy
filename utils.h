@@ -18,8 +18,7 @@ namespace Seven {
         typedef RawDataToLine CLASSNAME;
         RawDataToLine();
         ~RawDataToLine();
-        void Enable();
-        void Disable();
+        void Enable(bool enable);
 
     private:
         EVHandle m_handle;
@@ -27,6 +26,21 @@ namespace Seven {
         void RecvTimeout(void);
 
         String m_cache;
+    };
+
+    class RawDataToLog {
+    public:
+        typedef RawDataToLog CLASSNAME;
+        RawDataToLog();
+        ~RawDataToLog();
+        void Enable(bool enable);
+    
+    private:
+        EVHandle m_handle_txt;
+        EVHandle m_handle_hex;
+        FileOut m_out;
+
+        void SaveToFile(const EventPointer &ev);
     };
 
     class MyTextSettings {

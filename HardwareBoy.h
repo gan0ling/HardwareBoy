@@ -37,6 +37,7 @@ private:
   itas109::CSerialPort m_serDev;
   RawDataToLine m_rawtoline;
   CommonHighlighter m_highlighter;
+  RawDataToLog m_rawtolog;
 
 
   //menu 

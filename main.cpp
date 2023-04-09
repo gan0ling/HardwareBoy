@@ -30,7 +30,7 @@ HardwareBoy::HardwareBoy():
   queue.appendListener(EventType::evTextHighlight, THISBACK(DisplayText));
 
   //TODO: use config file to enable plugin
-  m_rawtoline.Enable();
+  m_rawtoline.Enable(true);
   m_highlighter.Enable(true);
 }
 
@@ -62,6 +62,8 @@ void HardwareBoy::OpenClose()
     //      2. Flow control use ui config
     m_serDev.init(set.name, set.baudrate, set.parity, set.dataBits, set.stopBits, itas109::FlowNone, READ_BUFF_SIZE);
     bool ret = m_serDev.open();
+    m_rawtolog.Enable(false);
+    m_rawtolog.Enable(true);
 
     //TODO: use config file
   } else {
