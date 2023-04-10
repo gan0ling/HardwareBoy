@@ -3,9 +3,9 @@ description "Hardware debug assistent\377";
 uses
 	CtrlLib,
 	HardwareBoy/plugins/SerialSetting,
-	TerminalCtrl/Terminal,
 	HardwareBoy/plugins/EventQueue,
-	HardwareBoy/plugins/Highlighter;
+	HardwareBoy/plugins/Highlighter,
+	HardwareBoy/plugins/TerminalCtl/Terminal;
 
 file
 	HardwareBoy.h,

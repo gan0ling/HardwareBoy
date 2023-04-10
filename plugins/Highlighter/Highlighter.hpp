@@ -19,7 +19,8 @@ class CommonHighlighter {
         bool m_enable_bracket;
         bool m_enable_colon;
         bool m_enable_comma;
-        EVHandle m_handle;
+        EVHandle m_handle_txt;
+        EVHandle m_handle_hex;
         VectorMap<String, String> m_colorMap;
 
         void loadSetting();

@@ -3,6 +3,7 @@
 
 using namespace Seven;
 
+namespace Seven {
 SerialSetting::SerialSetting() {
   // TODO: How to enable edit for baudList
   baudList.Add({
@@ -26,10 +27,8 @@ SerialSetting::SerialSetting() {
   parityList.SetIndex(0);
 
   // init port list
-  auto ports = itas109::CSerialPortInfo::availablePortInfos();
-  for (auto p : ports) {
-    portList.Add(p.portName);
-  }
+  RefreshPorts();
+
   CtrlLayout(*this, "Serial");
 
   // ok button, close window
@@ -37,6 +36,15 @@ SerialSetting::SerialSetting() {
   btnCancel <<= THISBACK(Close);
 
   m_select = false;
+}
+
+void SerialSetting::RefreshPorts(void)
+{
+  portList.Clear();
+  auto ports = itas109::CSerialPortInfo::availablePortInfos();
+  for (auto p : ports) {
+    portList.Add(p.portName);
+  }
 }
 
 void SerialSetting::ok()
@@ -116,6 +124,8 @@ struct SerialPortSetting SerialSetting::GetData() {
 
   return s;
 }
+
+};
 
 // GUI_APP_MAIN
 // {

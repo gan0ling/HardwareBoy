@@ -16,9 +16,12 @@ void CommonHighlighter::Enable(bool enable)
     EQ &q = EVGetGlobalQueue();
     if (enable) {
         //
-        m_handle = q.appendListener(EventType::evTextLine, THISBACK(Highlight));
+        m_handle_txt = q.appendListener(EventType::evTextLine, THISBACK(Highlight));
+        m_handle_hex = q.appendListener(EventType::evRawHexInput, THISBACK(Highlight));
+
     } else {
-        q.removeListener(EventType::evTextLine, m_handle);
+        q.removeListener(EventType::evTextLine, m_handle_txt);
+        q.removeListener(EventType::evRawHexInput, m_handle_hex);
     }
 }
 
@@ -195,38 +198,43 @@ void CommonHighlighter::Highlight(const EventPointer &ev)
 {
     //接收evTextLine， 输出evTextHighlight
     EQ &q = EVGetGlobalQueue();
+    if (ev->getType() == EventType::evTextLine) {
+        const TextLineEvent* event = static_cast<const TextLineEvent*>(ev.get());
 
-    const TextLineEvent* event = static_cast<const TextLineEvent*>(ev.get());
-
-    if (m_colorMap.IsEmpty())
-    {
-        //empty keywords, push event back 
-        q.enqueue(EventType::evTextHighlight, std::make_shared<TextHighlightEvent>(event->Line()));
-        return;
-    }
-
-    String ret; 
-
-    Vector<String> words = SplitWords(event->Line());
-    // DUMP(words);
-    const Index<String>& colorIndex = m_colorMap.GetIndex();
-    for (auto w : words) {
-        //TODO: case sensitive
-        String ww = ToLower(w);
-        // DUMP(ww);
-        int idx = colorIndex.Find(ww);
-        if (idx >= 0) {
-            //found
-            // int color = m_colorMap.Get(idx);
-            ret << pretty::paint(w, m_colorMap[idx]);
-        } else {
-            //not found
-            ret << w;
+        if (m_colorMap.IsEmpty())
+        {
+            //empty keywords, push event back 
+            q.enqueue(EventType::evTextHighlight, std::make_shared<TextHighlightEvent>(event->Line()));
+            return;
         }
+
+        String ret; 
+
+        Vector<String> words = SplitWords(event->Line());
+        // DUMP(words);
+        const Index<String>& colorIndex = m_colorMap.GetIndex();
+        for (auto w : words) {
+            //TODO: case sensitive
+            String ww = ToLower(w);
+            // DUMP(ww);
+            int idx = colorIndex.Find(ww);
+            if (idx >= 0) {
+                //found
+                // int color = m_colorMap.Get(idx);
+                ret << pretty::paint(w, m_colorMap[idx]);
+            } else {
+                //not found
+                ret << w;
+            }
+        }
+        ret << "\r\n";
+        // DUMP(ret);
+        q.enqueue(EventType::evTextHighlight, std::make_shared<TextHighlightEvent>(ret));
+    } else if (ev->getType() == EventType::evRawHexInput) {
+        const RawHexInputEvent *event = static_cast<const RawHexInputEvent*>(ev.get());
+        String ret(event->Get(), event->Size());
+        q.enqueue(EventType::evTextHighlight, std::make_shared<TextHighlightEvent>(ret));
     }
-    ret << "\r\n";
-    // DUMP(ret);
-    q.enqueue(EventType::evTextHighlight, std::make_shared<TextHighlightEvent>(ret));
 }
 
 CommonHighlighter::~CommonHighlighter()

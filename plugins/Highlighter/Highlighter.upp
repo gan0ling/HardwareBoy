@@ -1,8 +1,7 @@
 description "Highlighter\377";
 
 uses
-	CtrlLib,
-	TerminalCtrl/Terminal;
+	CtrlLib;
 
 file
 	pretty.hpp,

@@ -5,7 +5,7 @@
 
 #include "CSerialPort/SerialPort.h"
 #include "plugins/SerialSetting/SerialSetting.h"
-#include "TerminalCtrl/Terminal/Terminal.h"
+#include "plugins/TerminalCtl/Terminal/Terminal.h"
 #include "plugins/EventQueue/EventQueue.h"
 #include "plugins/Highlighter/Highlighter.hpp"
 #include "utils.h"
@@ -49,7 +49,7 @@ private:
   //serial
   void RunSerialConfig(void);
   void OpenClose(void);
-  void SwitchHexTextMode(enum RecvMode mode);
+  void SwitchHexTextMode();
 
   //terminal receive 
   void DisplayText(const EventPointer &ev);

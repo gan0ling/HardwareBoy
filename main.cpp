@@ -39,9 +39,13 @@ HardwareBoy::~HardwareBoy()
   ShutdownThreads();
 }
 
-void HardwareBoy::SwitchHexTextMode(enum RecvMode newMode)
+void HardwareBoy::SwitchHexTextMode()
 {
-  m_curRecvMode = newMode;
+  if (m_curRecvMode == RecvMode::TEXT_MODE) {
+    m_curRecvMode = RecvMode::HEX_MODE;
+  } else {
+    m_curRecvMode = RecvMode::TEXT_MODE;
+  }
 }
 
 void HardwareBoy::OpenClose()
@@ -83,6 +87,7 @@ void HardwareBoy::FileMenu(Bar &menu)
 void HardwareBoy::SettingMenu(Bar &menu)
 {
   menu.Add("Serial", THISBACK(RunSerialConfig));
+  menu.Add("HexMode", THISBACK(SwitchHexTextMode));
 }
 
 void HardwareBoy::SetupMenu(Bar &menu)
@@ -94,11 +99,12 @@ void HardwareBoy::SetupMenu(Bar &menu)
 void HardwareBoy::RunSerialConfig()
 {
   //FIXME: why need click twice button to close window
+  m_serialSetting.RefreshPorts();
   m_serialSetting.Run();
 }
 
 static inline int FormatHexDigit(int c) {
-	return c < 10 ? c + '0' : c - 10 + 'a';
+	return c < 10 ? c + '0' : c - 10 + 'A';
 }
 
 void HardwareBoy::onReadEvent(const char *portName, unsigned int readBufferLen)
@@ -122,19 +128,20 @@ void HardwareBoy::onReadEvent(const char *portName, unsigned int readBufferLen)
       //read failed, exit
       return;
     }
-    readBufferLen -= len;
-    if (m_curRecvMode == HEX_MODE) {
+    if (m_curRecvMode == RecvMode::HEX_MODE) {
       //change text to hex char
-      Buffer<byte> hex(len * 2);
-      for (int i = 0; i < readBufferLen; i++) {
-        hex[i] = FormatHexDigit(m_readBuf[i] & 0xF);
-        hex[i+1] = FormatHexDigit((m_readBuf[i] >> 4) & 0xF);
+      Buffer<byte> hex(len * 3); //增加空格
+      for (int i = 0; i < len; i++) {
+        hex[i*3] = FormatHexDigit((m_readBuf[i] >> 4) & 0xF);
+        hex[i*3+1] = FormatHexDigit(m_readBuf[i] & 0xF);
+        hex[i*3+2] = ' ';
       }
-      queue.enqueue(std::make_shared<RawHexInputEvent>(~hex, len*2));
+      queue.enqueue(std::make_shared<RawHexInputEvent>(~hex, len*3));
     } else {
       //Text mode, just enqueue event
       queue.enqueue(std::make_shared<RawInputEvent>((byte*)&m_readBuf[0], len));
     }
+    readBufferLen -= len;
   }
 
     // term.Write(m_readBuf, len, false);

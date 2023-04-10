@@ -26,6 +26,8 @@ namespace Seven {
 
     struct SerialPortSetting GetData();
 
+    void RefreshPorts(void);
+
   private:
     bool m_select;
 
