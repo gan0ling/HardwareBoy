@@ -79,8 +79,9 @@ void HardwareBoy::OpenClose()
 
 void HardwareBoy::FileMenu(Bar &menu)
 {
-  menu.Add("Exit", Breaker(IDOK));
+  // menu.Add("Search", THISBACK(SearchTerm));
   menu.Separator();
+  menu.Add("Exit", Breaker(IDOK));
 
 }
 

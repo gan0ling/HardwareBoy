@@ -53,6 +53,7 @@ private:
 
   //terminal receive 
   void DisplayText(const EventPointer &ev);
+  void SearchTerm(void);
 };
 
 #endif

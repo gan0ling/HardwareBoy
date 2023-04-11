@@ -162,6 +162,38 @@ public:
 	}
 };
 
+void TerminalCtrl::SetSearchKeyword(String &word)
+{
+	search_keyword.Clear();
+	search_keyword = word;
+}
+
+Vector<int> TerminalCtrl::SearchWordsIndex(String &line)
+{
+	Vector<int> ret;
+
+	if (!search_keyword.IsEmpty()) {
+		//TODO: use RegExp
+		int idx = line.Find(search_keyword);
+		if (idx < 0) {
+			return ret;
+		}
+		ret.Add(idx);
+		int i = search_keyword.GetCount(); 
+		while (i < line.GetCount()) {
+			idx = line.Find(search_keyword, i);
+			if (idx < 0) {
+				break;
+			} else {
+				ret.Add(idx);
+				i += search_keyword.GetCount();
+			}
+		}
+	}
+
+	return ret;
+}
+
 void TerminalCtrl::Paint0(Draw& w, bool print)
 {
 	GuiLock __;
@@ -195,18 +227,29 @@ void TerminalCtrl::Paint0(Draw& w, bool print)
 		const VTLine& line = page->FetchLine(i);
 		if(!line.IsVoid() && w.IsPainting(0, y, wsz.cx, csz.cy)) {
 			Renderer::Attrs *la = lineattrs;
+			Vector<int> searchIndex = SearchWordsIndex(line.ToString());
 			for(int j = 0; j < psz.cx; ++j, ++la) {
 				la->cell = &line.Get(j, GetAttrs());
 				la->x = j * csz.cx;
 				la->y = y;
 				la->is_link = hyperlinks && la->cell->IsHyperlink();
-				//TODO: add search highlight
 				if((la->highlighted = IsSelected(Point(j, i)))) {
 					la->ink   = colortable[COLOR_INK_SELECTED];
 					la->paper = colortable[COLOR_PAPER_SELECTED];
 				}
 				else {
 					SetInkAndPaperColor(*la->cell, la->ink, la->paper);
+				}
+				//TODO: add search highlight
+				if (!searchIndex.IsEmpty()) {
+					for (auto idx: searchIndex) {
+						if ((j >= idx) && ( j <= idx + search_keyword.GetLength())) {
+							la->highlighted = true;
+							la->ink   = colortable[COLOR_INK_SELECTED];
+							la->paper = colortable[COLOR_PAPER_SELECTED];
+							break;
+						}
+					}
 				}
 				if(!nobackground
 				|| !IsNull(la->cell->paper)
