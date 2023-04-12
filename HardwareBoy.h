@@ -23,6 +23,17 @@ enum RecvMode {
   HEX_MODE = 1,
 };
 
+namespace Seven {
+  class SearchBox: public WithSearchLayout<TopWindow> {
+  public:
+      typedef SearchBox CLASSNAME;
+      SearchBox();
+      ~SearchBox();
+      virtual bool Key(dword key, int);
+      void Close();
+  private:
+      void OnTimeout(void);
+  };
 class HardwareBoy : public WithHardwareBoyLayout<TopWindow>, itas109::CSerialPortListener {
 public:
   typedef HardwareBoy CLASSNAME;
@@ -38,6 +49,7 @@ private:
   RawDataToLine m_rawtoline;
   CommonHighlighter m_highlighter;
   RawDataToLog m_rawtolog;
+  SearchBox m_searchBox;
 
 
   //menu 
@@ -53,7 +65,10 @@ private:
 
   //terminal receive 
   void DisplayText(const EventPointer &ev);
+  void Search(const EventPointer &ev);
   void SearchTerm(void);
+};
+
 };
 
 #endif

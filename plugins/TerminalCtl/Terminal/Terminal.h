@@ -876,7 +876,7 @@ public:
     const GSets&    GetLegacyCharsets() const                   { return gsets;      }
     TerminalCtrl&   LegacyCharsets(bool b = true)               { legacycharsets = b; return *this; }
     TerminalCtrl&   NoLegacyCharsets()                          { return LegacyCharsets(false); }
-    void            SetSearchKeyword(String &word);
+    void            SetSearchKeyword(const String &word);
 
 private:
     byte            ResolveVTCharset(byte cs)                   { return ResolveCharset(legacycharsets ? cs : charset); }
@@ -884,7 +884,7 @@ private:
     int             EncodeCodepoint(int c, byte gset);
     WString         DecodeDataString(const String& s);
     String          EncodeDataString(const WString& ws);
-    Vector<int> SearchWordsIndex(String &line);
+    Vector<int>     SearchWordsIndex(String &line);
 
 private:
     GSets           gsets;

@@ -20,6 +20,8 @@ namespace Seven {
         evTextLine,
 		//highlight lines
 		evTextHighlight,
+		//search text
+		evSearchText,
 	};
     class MyTime: public Time {
       public:
@@ -97,7 +99,7 @@ namespace Seven {
     class TextLineEvent: public Event {
       public:
         explicit TextLineEvent(String &line): Event(EventType::evTextLine), line(line) {}
-        String Line() const {return line;}
+        const String &Line() const {return line;}
       private:
         String line;
     };
@@ -105,10 +107,19 @@ namespace Seven {
 	class TextHighlightEvent: public Event {
 		public:
 			explicit TextHighlightEvent(String &line): Event(EventType::evTextHighlight), line(line) {}
-			String Line() const { return line;}
+			explicit TextHighlightEvent(const String &line): Event(EventType::evTextHighlight), line(line) {}
+			const String &Line() const { return line;}
 		
 		private:
 			String line;
+	};
+
+	class SearchTextEvent: public Event {
+		public:
+			explicit SearchTextEvent(String &text) : Event(EventType::evSearchText), search(text) {}
+			const String &text() const {return search;}
+		private:
+			String search;
 	};
     
 	// We will pass event as EventPointer, here it's std::shared_ptr<Event>.

@@ -162,7 +162,7 @@ public:
 	}
 };
 
-void TerminalCtrl::SetSearchKeyword(String &word)
+void TerminalCtrl::SetSearchKeyword(const String &word)
 {
 	search_keyword.Clear();
 	search_keyword = word;
