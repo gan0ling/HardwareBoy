@@ -1,0 +1,11 @@
+uses
+	CtrlLib;
+
+file
+	SendCheck.h,
+	SendCheck.cpp,
+	SendCheck.lay;
+
+mainconfig
+	"" = "GUI";
+

@@ -17,10 +17,8 @@ namespace Seven {
 
     // m_serDev.setReadIntervalTimeout(0);
     int ret = m_serDev.connectReadEvent(this);
-    LOG("connectReadEvent:ret " << ret);
 
     //terminal setting
-    term.ShowScrollBar();
 
     //TODO: remove
     //register evRawInput/evRawHexInput
@@ -94,12 +92,22 @@ namespace Seven {
     menu.Add("HexMode", THISBACK(SwitchHexTextMode));
   }
 
+  void HardwareBoy::PluginMenu(Bar &menu)
+  {
+    menu.Add("SendCheck", THISBACK(RunSendCheck));
+  }
+
   void HardwareBoy::SetupMenu(Bar& menu)
   {
     menu.Add("File", THISBACK(FileMenu));
     menu.Add("Setting", THISBACK(SettingMenu));
+    menu.Add("Plugins", THISBACK(PluginMenu));
   }
 
+  void HardwareBoy::RunSendCheck()
+  {
+    m_sendCheckCtrl.OpenMain();
+  }
   void HardwareBoy::RunSerialConfig()
   {
     //FIXME: why need click twice button to close window
@@ -246,12 +254,14 @@ GUI_APP_MAIN
 {
   //create event queue process thread
   Thread::Start(EVProcess);
-// EQ &queue = EVGetGlobalQueue();
-// queue.appendListener(EventType::evRawInput, [](const EventPointer &ev) {
-  // LOG("recv raw input");
-// });
-// HardwareBoy().Run();
-HardwareBoy main;
-main.OpenMain();
-Ctrl::EventLoop();
+  // EQ &queue = EVGetGlobalQueue();
+  // queue.appendListener(EventType::evRawInput, [](const EventPointer &ev) {
+    // LOG("recv raw input");
+  // });
+  // HardwareBoy().Run();
+  HardwareBoy main;
+  LoadFromFile(main);
+  main.OpenMain();
+  Ctrl::EventLoop();
+  StoreToFile(main);
 }

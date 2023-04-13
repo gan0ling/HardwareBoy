@@ -5,6 +5,7 @@ uses
 	HardwareBoy/plugins/SerialSetting,
 	HardwareBoy/plugins/EventQueue,
 	HardwareBoy/plugins/Highlighter,
+	HardwareBoy/plugins/SendCheck,
 	HardwareBoy/plugins/TerminalCtl/Terminal;
 
 file

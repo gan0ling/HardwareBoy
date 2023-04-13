@@ -9,6 +9,7 @@
 #include "plugins/EventQueue/EventQueue.h"
 #include "plugins/Highlighter/Highlighter.hpp"
 #include "utils.h"
+#include "plugins/SendCheck/SendCheck.h"
 
 #define READ_BUFF_SIZE  (1024)
 
@@ -50,12 +51,13 @@ private:
   CommonHighlighter m_highlighter;
   RawDataToLog m_rawtolog;
   SearchBox m_searchBox;
+  SendCheckCtrl m_sendCheckCtrl;
 
 
   //menu 
   void SetupMenu(Bar &bar);
   void FileMenu(Bar &bar);
-  // void PluginMenu(Bar &bar);
+  void PluginMenu(Bar &bar);
   void SettingMenu(Bar &bar);
   
   //serial
@@ -67,6 +69,8 @@ private:
   void DisplayText(const EventPointer &ev);
   void Search(const EventPointer &ev);
   void SearchTerm(void);
+
+  void RunSendCheck(void);
 };
 
 };

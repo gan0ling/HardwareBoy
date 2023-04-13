@@ -3,7 +3,7 @@ LAYOUT(HardwareBoyLayout, 700, 608)
 	ITEM(Upp::Button, btnOpen, SetLabel(t_("Open")).SetFont(Upp::StdFont().Bold()).Tip(t_("Open or Close Device")).LeftPosZ(0, 56).BottomPosZ(1, 19))
 	ITEM(Upp::DocEdit, docSend, Tip(t_("Send Data to Device")).HSizePosZ(56, 56).BottomPosZ(1, 19))
 	ITEM(Upp::Button, btnSend, SetLabel(t_("Send")).Tip(t_("Send")).RightPosZ(0, 56).BottomPosZ(1, 19))
-	ITEM(TerminalCtrl, term, ShowScrollBar(true).SetFrame(Upp::NullFrame()).HSizePosZ(0, 0).VSizePosZ(16, 20))
+	ITEM(TerminalCtrl, term, ShowSizeHint(false).ShowScrollBar(true).SetFrame(Upp::NullFrame()).HSizePosZ(0, 0).VSizePosZ(16, 20))
 END_LAYOUT
 
 LAYOUT(SearchLayout, 392, 24)

@@ -22,6 +22,8 @@ namespace Seven {
 		evTextHighlight,
 		//search text
 		evSearchText,
+		//send raw data
+		evRawSend,
 	};
     class MyTime: public Time {
       public:
@@ -79,6 +81,20 @@ namespace Seven {
 		private:
             size_t size;
 			Buffer<byte> data;
+	};
+
+	class RawSendEvent: public Event {
+	public:
+		explicit RawSendEvent(const char *raw, size_t size) : Event(EventType::evRawSend), size(size) {
+			//copy data from raw
+			data.Alloc(size);
+			memcpy(~data, raw, size);
+		}
+		const byte *Get() const { return data.Get();}
+		size_t Size() const { return size;}
+	private:
+		size_t size;
+		Buffer<byte> data;
 	};
 
 	class RawHexInputEvent : public Event {

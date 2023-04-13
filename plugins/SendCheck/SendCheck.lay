@@ -1,0 +1,7 @@
+LAYOUT(SendCheckLayout, 860, 264)
+	ITEM(Upp::ArrayCtrl, m_testContent, Inserting(true).Appending(true).AppendLine(true).Removing(true).Moving(true).HSizePosZ(0, 0).VSizePosZ(28, 12))
+	ITEM(Upp::Button, btnLoad, SetLabel(t_("Load")).LeftPosZ(0, 64).TopPosZ(0, 24))
+	ITEM(Upp::Button, btnSave, SetLabel(t_("Save")).LeftPosZ(72, 64).TopPosZ(0, 24))
+	ITEM(Upp::Button, btnSend, SetLabel(t_("Send")).LeftPosZ(148, 64).TopPosZ(0, 24))
+END_LAYOUT
+

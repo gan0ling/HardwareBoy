@@ -5,7 +5,7 @@ uses
 
 file
 	pretty.hpp,
-	Highlighter.hpp,
+	pretty.cpp,
 	Highlighter.cpp;
 
 mainconfig
