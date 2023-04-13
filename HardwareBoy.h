@@ -64,6 +64,8 @@ private:
   void RunSerialConfig(void);
   void OpenClose(void);
   void SwitchHexTextMode();
+  void SerialWrite(const EventPointer &ev);
+  void SendToSerial(void);
 
   //terminal receive 
   void DisplayText(const EventPointer &ev);

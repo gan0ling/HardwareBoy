@@ -210,9 +210,11 @@ bool SendCheckCtrl::SendAndCheck(int row)
     String check = TrimBoth(AsString(m_testContent.Get(row, ID_CHECK)));
     bool newline = m_testContent.Get(row, ID_NEWLINE);
     bool hex = m_testContent.Get(row, ID_HEX);
-
+    int cnt = m_testContent.Get(row, ID_CNT);
+    double time = m_testContent.Get(row, ID_TIME);
+    
     if (!check.IsEmpty()) {
-      //need check receive data
+      //need check receive data, open listener
       EnableListener(true);
       m_checkHex = hex;
       m_check.Clear();
@@ -228,22 +230,40 @@ bool SendCheckCtrl::SendAndCheck(int row)
       pretty::MapColor("bold"),
     };
     String high = pretty::paint(send, colors); 
-    if (hex) {
-        //send hex
-        String hexsend = HexEncode(send);
-        q.enqueue(EventType::evRawSend, std::make_shared<RawSendEvent>(hexsend.Begin(), hexsend.GetLength()));
-        //together send data to display(evTextHighlight)
-    } else {
-        //send string
-        q.enqueue(EventType::evRawSend, std::make_shared<RawSendEvent>(send.Begin(), send.GetLength()));
+    
+    //send data 
+    for (int i = 0; i < cnt; i++) {
+        //send data to serial port
+        if (hex) {
+            //send hex
+            String hexsend = HexEncode(send);
+            q.enqueue(EventType::evRawSend, std::make_shared<RawSendEvent>(hexsend.Begin(), hexsend.GetLength()));
+            //together send data to display(evTextHighlight)
+        } else {
+            //send string
+            q.enqueue(EventType::evRawSend, std::make_shared<RawSendEvent>(send.Begin(), send.GetLength()));
+        }
+        //send data to display
+        q.enqueue(EventType::evTextHighlight, std::make_shared<TextHighlightEvent>(high));
+        
+        //highlight send
+        EditString *p = static_cast<EditString*> (m_testContent.GetCtrl(row, m_testContent.GetPos(ID_SEND)));
+        p->SetColor(Green());
+        //highlight recv to red, if we recv and check ok, will set data to green
+        if (!check.IsEmpty()) {
+            EditString *p = static_cast<EditString*> (m_testContent.GetCtrl(row, m_testContent.GetPos(ID_CHECK)));
+            p->SetColor(Red());
+        }
+        //2 case:
+        //  1. we need check recv string, 
+        //  2. do not need check
+        //anyway, we all need to wait, if time not zero
+        if (m_semaphore.Wait(time*1000)) {
+            //recv and check ok, break loop
+            p->SetColor(Green());
+            break;
+        }
     }
-    q.enqueue(EventType::evTextHighlight, std::make_shared<TextHighlightEvent>(high));
-    EditString *p = static_cast<EditString*> (m_testContent.GetCtrl(row, m_testContent.GetPos(ID_SEND)));
-    p->SetColor(Green());
-    if (!check.IsEmpty()) {
-      EditString *p = static_cast<EditString*> (m_testContent.GetCtrl(row, m_testContent.GetPos(ID_CHECK)));
-      p->SetColor(Red());
-    } 
   return true;
 }
 

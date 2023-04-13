@@ -188,7 +188,7 @@ Vector<String> CommonHighlighter::SplitWords(const String &s)
             tmp << c;
         }
     }
-    if (!tmp.GetCount()) {
+    if (tmp.GetCount()) {
         ret << tmp;
     }
     return ret;
