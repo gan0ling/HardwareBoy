@@ -56,14 +56,17 @@ namespace Seven {
 
 	class CmdEvent : public Event {
 		public:
-		  explicit CmdEvent(int cmd)
+		  explicit CmdEvent(Upp::Id id, int cmd)
 				: Event(EventType::evCmd),
+				  target(id),
 				  cmd(cmd)
 			{
 
 			}
-			int getCmd() {return cmd;}
+			const int Cmd() const {return cmd;}
+			const Upp::Id& Id() const {return target;}
 		private:
+			Upp::Id target;
 			int cmd;
 				
 	};
@@ -156,7 +159,7 @@ namespace Seven {
 	using EQ = eventpp::EventQueue<EventType, void(const EventPointer &), EventPolicy>;
 	typedef EQ::Handle EVHandle;
 
-	void EVProcess();
+	void EVProcess(EQ &q);
 	EQ& EVGetGlobalQueue();
 };
 

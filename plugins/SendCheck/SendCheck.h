@@ -12,6 +12,15 @@ using namespace Upp;
 namespace Seven {
     class SendCheckCtrl: public WithSendCheckLayout<TopWindow> {
     public :
+        struct SendLineItem {
+            bool hex;
+            bool newline;
+            int index;
+            int cnt;
+            double time;
+            String send;
+            String check;
+        };
         typedef SendCheckCtrl CLASSNAME;
         SendCheckCtrl();
         ~SendCheckCtrl();
@@ -20,11 +29,13 @@ namespace Seven {
     private:
 
         FileSel m_fs;
-        EVHandle m_txtHandle;
-        EVHandle m_hexHandle;
-        String m_check;
-        bool   m_checkHex;
-        Semaphore m_semaphore;
+        // EVHandle m_txtHandle;
+        // EVHandle m_hexHandle;
+        EVHandle m_cmdHandle;
+        // String m_check;
+        // bool   m_checkHex;
+        Array<struct SendLineItem> m_lines;
+        AsyncWork<void> m_worker;
 
         void LoadFile(void);
         void SaveFile(void);
@@ -35,6 +46,7 @@ namespace Seven {
         bool SendAndCheck(int row);
 
         void Check(const EventPointer &ev);
+        void RecvWorkerEv(const EventPointer &ev);
     };
 };
 

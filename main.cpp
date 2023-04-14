@@ -238,7 +238,12 @@ void SearchBox::OnTimeout() {
 
 GUI_APP_MAIN {
   // create event queue process thread
-  Thread::Start(EVProcess);
+  Thread::Start(
+    [=] {
+      EQ &q = EVGetGlobalQueue();
+      EVProcess(q);
+    }
+  );
   // EQ &queue = EVGetGlobalQueue();
   // queue.appendListener(EventType::evRawInput, [](const EventPointer &ev) {
   // LOG("recv raw input");

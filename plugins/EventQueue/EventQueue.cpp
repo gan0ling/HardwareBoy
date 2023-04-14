@@ -24,15 +24,14 @@ EQ& Seven::EVGetGlobalQueue()
     return queue;
 }
 
-void Seven::EVProcess()
+void Seven::EVProcess(EQ &q)
 {
-    LOG("Enter EVProcess");
     while (1) {
-        queue.waitFor(std::chrono::milliseconds(10));
+        q.waitFor(std::chrono::milliseconds(10));
         if (Thread::IsShutdownThreads()) {
           break;
         }
-        queue.process();
+        q.process();
     }
 }
 

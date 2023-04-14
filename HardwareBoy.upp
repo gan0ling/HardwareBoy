@@ -6,6 +6,7 @@ uses
 	HardwareBoy/plugins/EventQueue,
 	HardwareBoy/plugins/Highlighter,
 	HardwareBoy/plugins/SendCheck,
+	plugin/pcre,
 	HardwareBoy/plugins/TerminalCtl/Terminal;
 
 file

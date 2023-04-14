@@ -1,5 +1,6 @@
 #include "SendCheck.h"
 #include "Highlighter/pretty.hpp"
+#include <plugin/pcre/Pcre.h>
 
 using namespace Upp;
 
@@ -13,10 +14,14 @@ static Id ID_CHECK("Check");
 static Id ID_CNT("Count");
 static Id ID_TIME("Time");
 static Id ID_NEWLINE("NewLine");
+static Id ID_CMD("SenCheckCtrl/Worker");
+static Semaphore g_semaphore;
+
+static void SendWorker(Array<struct SendCheckCtrl::SendLineItem> &lines);
 
 SendCheckCtrl::SendCheckCtrl() 
 {
-    m_checkHex = false;
+    // m_checkHex = false;
     CtrlLayout(*this, "SendCheck Plugin");
     Sizeable().MaximizeBox().MinimizeBox();
     m_testContent.AddColumn(ID_ENABLE, " ").Ctrls<Option>();
@@ -46,11 +51,13 @@ void SendCheckCtrl::EnableListener(bool enable)
 {
   EQ &q = EVGetGlobalQueue();
   if (enable) {
-    m_txtHandle = q.appendListener(EventType::evTextLine, THISBACK(Check));
-    m_hexHandle = q.appendListener(EventType::evRawHexInput, THISBACK(Check));
+    // m_txtHandle = q.appendListener(EventType::evTextLine, THISBACK(Check));
+    // m_hexHandle = q.appendListener(EventType::evRawHexInput, THISBACK(Check));
+    m_cmdHandle = q.appendListener(EventType::evCmd, THISBACK(RecvWorkerEv));
   } else {
-    q.removeListener(EventType::evTextLine, m_txtHandle);
-    q.removeListener(EventType::evRawHexInput, m_hexHandle);
+    // q.removeListener(EventType::evTextLine, m_txtHandle);
+    // q.removeListener(EventType::evRawHexInput, m_hexHandle);
+    q.removeListener(EventType::evCmd, m_cmdHandle);
   }
 }
 SendCheckCtrl::~SendCheckCtrl()
@@ -171,100 +178,181 @@ void SendCheckCtrl::SaveFile()
 
 void SendCheckCtrl::SendAll()
 {
-    for (int i = 0; i < m_testContent.GetCount(); i++) {
-        bool enable = m_testContent.Get(i, ID_ENABLE);
-        if (enable) {
-            m_testContent.Select(i);
-            SendAndCheck(i);
-            //set color
+    //send or stop
+    if (btnSend.GetLabel() == "Send") {
+        //send
+        EnableListener(true);
+        //setup send data;
+        m_lines.Clear();
+        for (int i = 0; i < m_testContent.GetCount(); i++) {
+            bool enable = m_testContent.Get(i, ID_ENABLE);
+            if (enable) {
+                struct SendLineItem l; 
+                l.index = i;
+                l.hex = m_testContent.Get(i, ID_HEX);
+                l.newline = m_testContent.Get(i, ID_NEWLINE);
+                l.cnt = m_testContent.Get(i, ID_CNT);
+                l.time = m_testContent.Get(i, ID_TIME);
+                l.send = AsString(m_testContent.Get(i, ID_SEND));
+                l.check = TrimBoth(AsString(m_testContent.Get(i, ID_CHECK)));
+                m_lines.Add(l);
+            }
         }
-    } 
+        if (m_lines.GetCount()) {
+            auto a = Async([=] {
+                SendWorker(m_lines);
+            });
+            m_worker = pick(a);
+        }
+        btnSend.SetLabel("Stop");
+    } else {
+        //stop, close worker
+        m_worker.Cancel();
+        EnableListener(false);
+        btnSend.SetLabel("Send");
+    }
 }
 
-void SendCheckCtrl::Check(const EventPointer &ev)
+void SendCheckCtrl::RecvWorkerEv(const EventPointer &ev)
 {
-  String recv;
-  if (m_checkHex && ev->getType() == EventType::evRawHexInput) {
-    const RawHexInputEvent *event = static_cast<const RawHexInputEvent*>(ev.get());
-    recv = HexEncode(event->Get(), event->Size());
-  } 
-  if (EventType::evTextLine == ev->getType()) {
-    //check string
-    const TextLineEvent *event = static_cast<const TextLineEvent *>(ev.get());
-    recv = event->Line();
-  }
-  DUMP(m_check);
-  DUMP(recv);
-  if (!recv.IsEmpty()) {
-    if (m_check == recv) {
-      //found
-      m_semaphore.Release();
+    static int cnt = 0;
+    cnt++;
+    const CmdEvent * event = static_cast<const CmdEvent*>(ev.get());
+    if (event->Id() != ID_CMD) {
+        return;
     }
-  }
-}
-
-bool SendCheckCtrl::SendAndCheck(int row)
-{
-    EQ &q = EVGetGlobalQueue();
-    String send = AsString(m_testContent.Get(row, ID_SEND));
-    String check = TrimBoth(AsString(m_testContent.Get(row, ID_CHECK)));
-    bool newline = m_testContent.Get(row, ID_NEWLINE);
-    bool hex = m_testContent.Get(row, ID_HEX);
-    int cnt = m_testContent.Get(row, ID_CNT);
-    double time = m_testContent.Get(row, ID_TIME);
-    
-    if (!check.IsEmpty()) {
-      //need check receive data, open listener
-      EnableListener(true);
-      m_checkHex = hex;
-      m_check.Clear();
-      m_check = check;
+    GuiLock __;
+    int cmd = event->Cmd();
+    int row = cmd & 0xFF;
+    bool recv_ok = (cmd >> 8) & 0xFF;
+    if (cmd == -1) {
+        //m_worker exit
+        btnSend.SetLabel("Send");
+        return;
     }
-    
-    if (!hex && newline) {
-      send << "\r\n";
+    if (row >= m_testContent.GetCount()) {
+        return;
     }
-    Vector<int> colors = {
-    pretty::MapColor("cyan"),
-      pretty::MapColor("underlined"),
-      pretty::MapColor("bold"),
-    };
-    String high = pretty::paint(send, colors); 
-    
-    //send data 
-    for (int i = 0; i < cnt; i++) {
-        //send data to serial port
-        if (hex) {
-            //send hex
-            String hexsend = HexEncode(send);
-            q.enqueue(EventType::evRawSend, std::make_shared<RawSendEvent>(hexsend.Begin(), hexsend.GetLength()));
-            //together send data to display(evTextHighlight)
-        } else {
-            //send string
-            q.enqueue(EventType::evRawSend, std::make_shared<RawSendEvent>(send.Begin(), send.GetLength()));
-        }
-        //send data to display
-        q.enqueue(EventType::evTextHighlight, std::make_shared<TextHighlightEvent>(high));
-        
-        //highlight send
+    if (recv_ok) {
+        //recv ok
+        EditString *p = static_cast<EditString*> (m_testContent.GetCtrl(row, m_testContent.GetPos(ID_CHECK)));
+        p->SetColor(Green());
+    } else {
+        //send ok
         EditString *p = static_cast<EditString*> (m_testContent.GetCtrl(row, m_testContent.GetPos(ID_SEND)));
         p->SetColor(Green());
-        //highlight recv to red, if we recv and check ok, will set data to green
-        if (!check.IsEmpty()) {
-            EditString *p = static_cast<EditString*> (m_testContent.GetCtrl(row, m_testContent.GetPos(ID_CHECK)));
-            p->SetColor(Red());
+        p = static_cast<EditString*> (m_testContent.GetCtrl(row, m_testContent.GetPos(ID_CHECK)));
+        p->SetColor(Red());
+    }
+}
+
+void SendWorker(Array<struct SendCheckCtrl::SendLineItem> &lines)
+{
+    EQ &q = EVGetGlobalQueue();
+    EVHandle check_handle[2];
+    String check_recv;
+    String highlight;
+    bool check_hex = false;
+
+    Vector<int> colors = {
+        pretty::MapColor("cyan"),
+        pretty::MapColor("underlined"),
+        pretty::MapColor("bold"),
+    };
+
+
+    //check recv lambda
+    auto check_fn = [&] (const EventPointer &ev) {
+        String recv;
+        RegExp reg(check_recv);
+        if (check_hex && ev->getType() == EventType::evRawHexInput) {
+            const RawHexInputEvent *event = static_cast<const RawHexInputEvent*>(ev.get());
+            recv = HexEncode(event->Get(), event->Size());
+        } 
+        if (EventType::evTextLine == ev->getType()) {
+            //check string
+            const TextLineEvent *event = static_cast<const TextLineEvent *>(ev.get());
+            recv = TrimBoth(event->Line());
         }
-        //2 case:
-        //  1. we need check recv string, 
-        //  2. do not need check
-        //anyway, we all need to wait, if time not zero
-        if (m_semaphore.Wait(time*1000)) {
-            //recv and check ok, break loop
-            p->SetColor(Green());
-            break;
+        DUMP(check_hex);
+        DUMP(recv);
+        DUMP(check_recv);
+        if (!recv.IsEmpty()) {
+            // if (check_recv == recv) {
+            if (reg.Match(recv)) {
+                //found
+                g_semaphore.Release();
+            } else {
+                //maybe not regexp, use nomal match
+                if (recv == check_recv) {
+                    g_semaphore.Release();
+                }
+            }
+        }
+    };
+
+    for (int j = 0; j < lines.GetCount(); j++) {
+        struct SendCheckCtrl::SendLineItem &l = lines[j];
+        if (l.check.GetLength()) {
+            //TODO: start check
+            check_recv = l.check;
+            if (!(bool)check_handle[0]) {
+                //enable listener
+                check_handle[0] = q.appendListener(EventType::evTextLine, check_fn);
+                check_handle[1] = q.appendListener(EventType::evRawHexInput, check_fn);
+
+            }
+        }
+        check_hex = l.hex;
+        if (!l.hex && l.newline) {
+            l.send << "\r\n";
+        }
+        highlight.Clear();
+        highlight = pretty::paint(l.send, colors); 
+        //send data 
+        for (int i = 0; i < l.cnt; i++) {
+            if (Upp::CoWork::IsCanceled()) {
+                //quit, close listener
+                if ((bool)check_handle[0]) {
+                    q.removeListener(EventType::evTextLine, check_handle[0]);
+                    q.removeListener(EventType::evTextLine, check_handle[1]);
+                }
+                break;
+            }
+            //send data to serial port
+            if (l.hex) {
+                //send hex
+                String hexsend = HexEncode(l.send);
+                q.enqueue(EventType::evRawSend, std::make_shared<RawSendEvent>(hexsend.Begin(), hexsend.GetLength()));
+                //together send data to display(evTextHighlight)
+            } else {
+                //send string
+                q.enqueue(EventType::evRawSend, std::make_shared<RawSendEvent>(l.send.Begin(), l.send.GetLength()));
+            }
+            //send data to display
+            q.enqueue(EventType::evTextHighlight, std::make_shared<TextHighlightEvent>(highlight));
+            
+            q.enqueue(EventType::evCmd, std::make_shared<CmdEvent>(ID_CMD, l.index));
+            //2 case:
+            //  1. we need check recv string, 
+            //  2. do not need check
+            //anyway, we all need to wait, if time not zero
+            if (g_semaphore.Wait(l.time*1000)) {
+                //recv and check ok, break loop
+                q.enqueue(EventType::evCmd, std::make_shared<CmdEvent>(ID_CMD, l.index | 1<<8));
+                break;
+            }
         }
     }
-  return true;
+
+    //quit, close listener
+    if ((bool)check_handle[0]) {
+        q.removeListener(EventType::evTextLine, check_handle[0]);
+        q.removeListener(EventType::evTextLine, check_handle[1]);
+    }
+
+    //send evcmd to notify gui to change text from "stop" -> "send"
+    q.enqueue(EventType::evCmd, std::make_shared<CmdEvent>(ID_CMD, -1));
 }
 
 };
