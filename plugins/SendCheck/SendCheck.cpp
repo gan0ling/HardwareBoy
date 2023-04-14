@@ -192,7 +192,14 @@ void SendCheckCtrl::SendAll()
                 l.hex = m_testContent.Get(i, ID_HEX);
                 l.newline = m_testContent.Get(i, ID_NEWLINE);
                 l.cnt = m_testContent.Get(i, ID_CNT);
+                if (l.cnt == INT_NULL) {
+                    l.cnt = 1;
+                }
                 l.time = m_testContent.Get(i, ID_TIME);
+                if (l.time == DOUBLE_NULL) {
+                    //zero time mean wait forever
+                    l.time = 1;
+                }
                 l.send = AsString(m_testContent.Get(i, ID_SEND));
                 l.check = TrimBoth(AsString(m_testContent.Get(i, ID_CHECK)));
                 m_lines.Add(l);
