@@ -877,6 +877,8 @@ public:
     TerminalCtrl&   LegacyCharsets(bool b = true)               { legacycharsets = b; return *this; }
     TerminalCtrl&   NoLegacyCharsets()                          { return LegacyCharsets(false); }
     void            SetSearchKeyword(const String &word);
+    void            IgnoreScroll(bool ignore = true)            {ignorescroll = ignore;}
+    bool            GetIgnoreScroll()                           {return ignorescroll;}
 
 private:
     byte            ResolveVTCharset(byte cs)                   { return ResolveCharset(legacycharsets ? cs : charset); }

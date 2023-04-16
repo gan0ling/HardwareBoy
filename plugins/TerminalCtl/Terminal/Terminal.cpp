@@ -541,8 +541,14 @@ void TerminalCtrl::MouseMove(Point pt, dword keyflags)
 void TerminalCtrl::MouseWheel(Point pt, int zdelta, dword keyflags)
 {
 	bool b = IsTracking();
-	if(!b && page->HasHistory())
+	if(!b && page->HasHistory()) {
 		sb.Wheel(zdelta, wheelstep);
+		if (sb.Get() == (sb.GetTotal() - sb.GetPage())) {
+			ignorescroll = false;
+		} else {
+			ignorescroll = true;
+		}
+	}
 	else
 	if(zdelta != 0) {
 		if(IsAlternatePage() &&

@@ -128,7 +128,7 @@ void HardwareBoy::onReadEvent(const char *portName,
     }
     if (m_curRecvMode == RecvMode::HEX_MODE) {
       // change text to hex char
-      Buffer<byte> hex(len * 3); //增加空格
+      Buffer<byte> hex(len * 3); // 增加空格
       for (int i = 0; i < len; i++) {
         hex[i * 3] = FormatHexDigit((m_readBuf[i] >> 4) & 0xF);
         hex[i * 3 + 1] = FormatHexDigit(m_readBuf[i] & 0xF);
@@ -193,7 +193,8 @@ void HardwareBoy::SearchTerm() {
 void HardwareBoy::SendToSerial() {
   String send = docSend.Get();
   EQ &q = EVGetGlobalQueue();
-  q.enqueue(EventType::evRawSend, std::make_shared<RawSendEvent>(send.Begin(), send.GetLength()));
+  q.enqueue(EventType::evRawSend,
+            std::make_shared<RawSendEvent>(send.Begin(), send.GetLength()));
 }
 
 SearchBox::SearchBox() { CtrlLayout(*this, "Search"); }
@@ -238,12 +239,10 @@ void SearchBox::OnTimeout() {
 
 GUI_APP_MAIN {
   // create event queue process thread
-  Thread::Start(
-    [=] {
-      EQ &q = EVGetGlobalQueue();
-      EVProcess(q);
-    }
-  );
+  Thread::Start([=] {
+    EQ &q = EVGetGlobalQueue();
+    EVProcess(q);
+  });
   // EQ &queue = EVGetGlobalQueue();
   // queue.appendListener(EventType::evRawInput, [](const EventPointer &ev) {
   // LOG("recv raw input");
